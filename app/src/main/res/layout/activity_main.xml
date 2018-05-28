@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.hxs15.autohongbaogetter.MainActivity">
+
+    <TextView
+        android:id="@+id/hongbaotitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="抢到红包"
+        android:textSize="26sp"
+        android:layout_marginTop="80dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/hongbaonumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="66"
+        android:textColor="@color/colorStandOut"
+        android:textSize="42sp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintHorizontal_bias="0.23"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/hongbaotitle" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="个"
+        android:textSize="16sp"
+        android:layout_marginLeft="5dp"
+        app:layout_constraintLeft_toRightOf="@id/hongbaonumber"
+        app:layout_constraintBottom_toBottomOf="@id/hongbaonumber"/>
+
+    <TextView
+        android:layout_width="1dp"
+        android:layout_height="55dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/hongbaotitle"
+        android:layout_marginTop="20dp"
+        android:background="@color/colorDivide"/>
+
+
+    <TextView
+        android:id="@+id/hongbaomoney"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="100"
+        android:textSize="42sp"
+        android:textColor="@color/colorStandOut"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="70dp"
+        app:layout_constraintHorizontal_bias="0.92"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/hongbaotitle" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="元"
+        android:textSize="16sp"
+        android:layout_marginLeft="5dp"
+        app:layout_constraintLeft_toRightOf="@id/hongbaomoney"
+        app:layout_constraintBottom_toBottomOf="@id/hongbaomoney"/>
+
+    <Button
+        android:id="@+id/switch_btn"
+        android:layout_width="220dp"
+        android:layout_height="50dp"
+        android:text="打开自动抢红包"
+        android:textSize="22sp"
+        android:layout_marginTop="40dp"
+        android:onClick="autoGetterSwitch"
+        android:gravity="center"
+        android:background="@drawable/round_btn_bg"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/hongbaonumber"/>
+
+    <TextView
+        android:id="@+id/tips"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/switch_btn"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:text="@string/tips"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="《免责声明》"
+        android:textColor="@color/colorPrimary"
+        android:layout_marginTop="10dp"
+        android:onClick="showDutyClare"
+        app:layout_constraintTop_toBottomOf="@id/tips"
+        app:layout_constraintLeft_toLeftOf="@id/tips"
+        />
+
+
+</android.support.constraint.ConstraintLayout>

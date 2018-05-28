@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">红包助手</string>
+    <string name="tips">Tips: 在 设置->辅助功能 中开启红包助手后，才能愉快的抢红包哦！开启一段时间后某些机型会强制关闭该功能，届时请重新开启。\n开\\关过程中若提示\"某个应用遮挡了权限请求界面\"，请暂时关闭悬浮球再尝试操作。\n使用本软件即代表您同意以下《免责声明》。</string>
+
+    <string name="accessibility_service_description">开启本辅助功能后，将监控微信聊天信息并在发现微信红包时模拟人为点击自动抢红包。\n\n本功能不联网不会收集用户信息，请放心使用！</string>
+
+    <string name="accessibility_service_label">微信红包助手</string>
+
+    <string name="dutyClare">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;本软件使用辅助功能模拟人为点击自动抢微信红包，开发者不排除因使用本软件而带来的账号封禁风险，也不对因使用本软件而带来的后果负责，谢谢使用！</string>
+
+</resources>
