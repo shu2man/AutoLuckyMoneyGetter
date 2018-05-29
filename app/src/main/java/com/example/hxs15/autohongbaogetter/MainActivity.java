@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     public static boolean isOn=false;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
     public void updateInfo(String money,int count){
+        Toast.makeText(this,"--->rogger",Toast.LENGTH_SHORT).show();
         mtv.setText(money);
         ctv.setText(String.valueOf(count));
     }

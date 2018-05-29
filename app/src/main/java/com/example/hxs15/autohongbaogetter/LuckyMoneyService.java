@@ -126,7 +126,7 @@ public class LuckyMoneyService extends AccessibilityService {
             openLuckyMoney(event);
         }
         else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(event.getClassName())) {
-            //拆完红包后看详细的纪录界面
+            //拆完红包后看详情的纪录界面
             updateLuckyMoney(event);//if(isAutoGetter)
 
         }
@@ -134,8 +134,9 @@ public class LuckyMoneyService extends AccessibilityService {
             //在聊天界面,去点中红包
             clickChatLuckyMoney(event);
         }
-        else {
-
+        else if("android.widget.ListView".equals(event.getClassName()) && event.getEventType()==2048){
+            //聊天界面有新消息
+            clickChatLuckyMoney(event);
         }
 
     }
@@ -154,9 +155,16 @@ public class LuckyMoneyService extends AccessibilityService {
             //在聊天界面,去点中红包
             clickChatLuckyMoney(event);
         }
-        else {
+        else{
 
         }
+
+        // type-2048-内容改变-有新消息
+        // windowID-5876-群聊界面
+        // android.widget.ListView-聊天界面
+
+        //
+
     }
 
     public void findAndPerformActionButton(String key1,String key2){
