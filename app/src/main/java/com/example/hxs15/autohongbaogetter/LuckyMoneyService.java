@@ -71,6 +71,28 @@ public class LuckyMoneyService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        eventInfomation(event);
+
+        if("android.widget.ListView".equals(event.getClassName()) && (event.getEventType()==2048 || event.getEventType()==4096)){
+            //聊天界面有新消息，找找有没有红包，有就点开
+            clickChatLuckyMoney(event);
+        }
+        else if("com.tencent.mm.ui.LauncherUI".equals(event.getClassName())) {
+            //最近联系人列表,找红包，找到就点有红包的记录
+            clickLaunchUILuckyMoney(event);
+        }
+        else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(event.getClassName()) && isAutoGetter) {
+            //点中了红包，但是还没打开领取，下一步就是去拆红包
+            openLuckyMoney(event);
+        }
+        else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(event.getClassName()) && isAutoGetter) {
+            //拆完红包后看领取详情的界面，已经领取到了红包，统计红包信息
+            updateLuckyMoney(event);
+
+        }
+    }
+
+    private void eventInfomation(AccessibilityEvent event) {
         String pkn = String.valueOf(event.getPackageName());
 
         Log.i("eventArrive","-------------------------------------------------------------");
@@ -119,52 +141,6 @@ public class LuckyMoneyService extends AccessibilityService {
         Log.i("eventArrive",event.getWindowId()+"");
         Log.i("eventArrive","=============================================================");
 
-        //onLuckyMoneyEvent(event);
-
-        if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(event.getClassName())) {
-            //点中了红包，下一步就是去拆红包
-            openLuckyMoney(event);
-        }
-        else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(event.getClassName())) {
-            //拆完红包后看详情的纪录界面
-            updateLuckyMoney(event);//if(isAutoGetter)
-
-        }
-        else if("com.tencent.mm.ui.LauncherUI".equals(event.getClassName())) {
-            //在聊天界面,去点中红包
-            clickChatLuckyMoney(event);
-        }
-        else if("android.widget.ListView".equals(event.getClassName()) && event.getEventType()==2048){
-            //聊天界面有新消息
-            clickChatLuckyMoney(event);
-        }
-
-    }
-
-    private void onLuckyMoneyEvent(AccessibilityEvent event) {
-        if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(event.getClassName())) {
-            //点中了红包，下一步就是去拆红包
-            openLuckyMoney(event);
-        }
-        else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(event.getClassName())) {
-            //拆完红包后看详细的纪录界面
-            updateLuckyMoney(event);//if(isAutoGetter)
-
-        }
-        else if("com.tencent.mm.ui.LauncherUI".equals(event.getClassName())) {
-            //在聊天界面,去点中红包
-            clickChatLuckyMoney(event);
-        }
-        else{
-
-        }
-
-        // type-2048-内容改变-有新消息
-        // windowID-5876-群聊界面
-        // android.widget.ListView-聊天界面
-
-        //
-
     }
 
     public void findAndPerformActionButton(String key1,String key2){
@@ -208,11 +184,11 @@ public class LuckyMoneyService extends AccessibilityService {
         AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
         if(nodeInfo == null) return;
 
-        List<AccessibilityNodeInfo> infos=nodeInfo.findAccessibilityNodeInfosByText("已存入零钱，可直接提现");
+        List<AccessibilityNodeInfo> infos=nodeInfo.findAccessibilityNodeInfosByText("已存入零钱，可直接");//提现,消费等
         if(infos!=null && infos.size()>0){
-            AccessibilityNodeInfo node=infos.get(0).getParent();
-            if(node.getClassName().equals("android.widget.LinearLayout")){
-                if(node.getChildCount()>3){
+            for(int i=0;i<infos.size();i++){
+                AccessibilityNodeInfo node=infos.get(i).getParent();
+                if(node.getClassName().equals("android.widget.LinearLayout") && node.getChildCount()>=3){
                     try {
                         Double d=Double.parseDouble(node.getChild(2).getText().toString());//2-为红包金额
                         Double m=Double.parseDouble(sharedPreferences.getString("money","0"));
@@ -226,19 +202,21 @@ public class LuckyMoneyService extends AccessibilityService {
                         bundle.putInt("count",c);
                         msg.setData(bundle);
                         MainActivity.handler.sendMessage(msg);
-                        Toast.makeText(this,"sent--->",Toast.LENGTH_SHORT).show();
 
                         SharedPreferences.Editor editor=sharedPreferences.edit();
                         editor.putString("money",String.valueOf(m));
                         editor.putInt("count",c);
                         editor.apply();
+                        Toast.makeText(this,"shared and sent--->",Toast.LENGTH_SHORT).show();
+                        break;
                     }catch (Exception e){
                         e.printStackTrace();
                     }
                 }
             }
         }
-        //this.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+        isAutoGetter=false;
+        this.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
     }
     public void openLuckyMoney(AccessibilityEvent event){
         AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
@@ -246,7 +224,11 @@ public class LuckyMoneyService extends AccessibilityService {
 
         List<AccessibilityNodeInfo> nodes00=nodeInfo.findAccessibilityNodeInfosByText("手慢了，红包派完了");
         List<AccessibilityNodeInfo> nodes01=nodeInfo.findAccessibilityNodeInfosByText("该红包已超过24小时");
-        if((nodes00!=null && nodes00.size()>0) || (nodes01!=null && nodes01.size()>0)) this.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+        if((nodes00!=null && nodes00.size()>0) || (nodes01!=null && nodes01.size()>0)) {
+            if((nodes00!=null && nodes00.size()>0) || (nodes01!=null && nodes01.size()>0))
+            isAutoGetter=false;
+            return;
+        }
 
         List<AccessibilityNodeInfo> nodes=nodeInfo.findAccessibilityNodeInfosByText("開");
         if(nodes!=null&&nodes.size()>0) {
@@ -267,24 +249,30 @@ public class LuckyMoneyService extends AccessibilityService {
     public void clickChatLuckyMoney(AccessibilityEvent event){
         AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
         if(nodeInfo==null) return;
-        //假设为聊天界面，查找红包
+        //聊天界面，查找红包
         List<AccessibilityNodeInfo> nodes1 = nodeInfo.findAccessibilityNodeInfosByText("领取红包");
-        if(nodes1==null) return;
-        //假设为最近联系人列表，查找红包
-        if(nodes1.isEmpty()){
-            List<AccessibilityNodeInfo> nodes2 = nodeInfo.findAccessibilityNodeInfosByText("[微信红包]");
-            if(nodes2!=null && nodes2.size()>0){
-                //在最近联系人列表中点击有红包的聊天记录
-                if(nodes2.get(0).isClickable()) nodes2.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                else if(nodes2.get(0).getParent().isClickable()) nodes2.get(0).getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            }
-        }
-        else{
+        //聊天界面内找到红包
+        if(nodes1!=null && !nodes1.isEmpty()){
             AccessibilityNodeInfo node=nodes1.get(nodes1.size()-1);
             if(node.isClickable()) node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             else if(node.getParent().isClickable()) node.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            isAutoGetter=true;
         }
+    }
 
+    public void clickLaunchUILuckyMoney(AccessibilityEvent event){
+        AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
+        if(nodeInfo==null) return;
+
+        //最近联系人列表，查找红包
+        List<AccessibilityNodeInfo> nodes2 = nodeInfo.findAccessibilityNodeInfosByText("[微信红包]");
+        if(nodes2!=null && nodes2.size()>0) {
+            //在最近联系人列表中点击有红包的聊天记录
+            if (nodes2.get(0).isClickable())
+                nodes2.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            else if (nodes2.get(0).getParent().isClickable())
+                nodes2.get(0).getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        }
     }
 
 

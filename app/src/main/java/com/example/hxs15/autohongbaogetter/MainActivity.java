@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
         mtv=findViewById(R.id.hongbaomoney);
         ctv=findViewById(R.id.hongbaonumber);
 
-        //mtv.setText(sharedPreferences.getString("money","0"));
-        //ctv.setText(String.valueOf(sharedPreferences.getInt("count",0)));
+        mtv.setText(sharedPreferences.getString("money","0"));
+        ctv.setText(String.valueOf(sharedPreferences.getInt("count",0)));
 
         handler=new myHandler();
     }
