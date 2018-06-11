@@ -5,11 +5,15 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.os.Parcelable;
+import android.os.PowerManager;
+import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -36,7 +40,7 @@ public class LuckyMoneyService extends AccessibilityService {
 
     private static String TAG = "LuckyMoneyService";
     private static String WECHAT_PACKAGE_NAME="com.tencent.mm";
-    private static String LUCKY_MONEY_KEY_WORD="[微信红包]";
+    private static String LUCKY_MONEY_KEY_WORD="[微信红包]";//通知栏关键字
 
     private boolean isAutoGetter=false;
     public static Double money=0.0;
@@ -73,23 +77,32 @@ public class LuckyMoneyService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event) {
         eventInfomation(event);
 
-        if("android.widget.ListView".equals(event.getClassName()) && (event.getEventType()==2048 || event.getEventType()==4096)){
-            //聊天界面有新消息，找找有没有红包，有就点开
-            clickChatLuckyMoney(event);
+        boolean isAuto=sharedPreferences.getBoolean("isOn",false);
+        if(isAuto){
+            if("android.widget.ListView".equals(event.getClassName()) && (event.getEventType()==2048 || event.getEventType()==4096)){
+                //聊天界面有新消息，找找有没有红包，有就点开
+                clickChatLuckyMoney(event);
+            }
+            else if("com.tencent.mm.ui.LauncherUI".equals(event.getClassName())) {
+                //最近联系人列表,找红包，找到就点有红包的记录
+                clickLaunchUILuckyMoney(event);
+            }
+            else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(event.getClassName()) && isAutoGetter) {
+                //点中了红包，但是还没打开领取，下一步就是去拆红包
+                openLuckyMoney(event);
+            }
+            else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(event.getClassName()) && isAutoGetter) {
+                //拆完红包后看领取详情的界面，已经领取到了红包，统计红包信息
+                updateLuckyMoney(event);
+            }
+            else if(event.getEventType()==AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED){
+                //通知栏状态改变,有新消息了
+                Parcelable data=event.getParcelableData();
+                if(data instanceof Notification) handleNotificationLuckyMoney((Notification)data);
+            }
         }
-        else if("com.tencent.mm.ui.LauncherUI".equals(event.getClassName())) {
-            //最近联系人列表,找红包，找到就点有红包的记录
-            clickLaunchUILuckyMoney(event);
-        }
-        else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(event.getClassName()) && isAutoGetter) {
-            //点中了红包，但是还没打开领取，下一步就是去拆红包
-            openLuckyMoney(event);
-        }
-        else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(event.getClassName()) && isAutoGetter) {
-            //拆完红包后看领取详情的界面，已经领取到了红包，统计红包信息
-            updateLuckyMoney(event);
 
-        }
+
     }
 
     private void eventInfomation(AccessibilityEvent event) {
@@ -222,19 +235,22 @@ public class LuckyMoneyService extends AccessibilityService {
         AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
         if(nodeInfo == null) return;
 
+        //红包被领完或是过期，返回
         List<AccessibilityNodeInfo> nodes00=nodeInfo.findAccessibilityNodeInfosByText("手慢了，红包派完了");
         List<AccessibilityNodeInfo> nodes01=nodeInfo.findAccessibilityNodeInfosByText("该红包已超过24小时");
         if((nodes00!=null && nodes00.size()>0) || (nodes01!=null && nodes01.size()>0)) {
-            if((nodes00!=null && nodes00.size()>0) || (nodes01!=null && nodes01.size()>0))
             isAutoGetter=false;
+            this.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
             return;
         }
 
+        //查找开按键
         List<AccessibilityNodeInfo> nodes=nodeInfo.findAccessibilityNodeInfosByText("開");
         if(nodes!=null&&nodes.size()>0) {
             AccessibilityNodeInfo targetNode = nodes.get(0);
             targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
         }
+        //找不到则对子项逐个尝试
         else {
             for (int i = 0; i < nodeInfo.getChildCount(); i++) {
                 AccessibilityNodeInfo node = nodeInfo.getChild(i);
@@ -275,5 +291,18 @@ public class LuckyMoneyService extends AccessibilityService {
         }
     }
 
+    public void handleNotificationLuckyMoney(Notification notification){
+        PendingIntent pendingIntent = notification.contentIntent;
+        Bundle bundle= notification.extras;
+        String content=bundle.getString(Notification.EXTRA_TEXT);
+
+        if(content!=null && content.contains(LUCKY_MONEY_KEY_WORD)){
+            try {
+                pendingIntent.send();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }
